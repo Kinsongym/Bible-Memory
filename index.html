@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聖經背誦挑戰 App</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-light: #eff6ff;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success-color: #16a34a;
+            --accent-color: #d97706;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px 16px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .app-card {
+            width: 100%;
+            max-width: 480px;
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            color: var(--text-main);
+            margin: 0 0 6px 0;
+            font-weight: 700;
+        }
+
+        .tab-group {
+            display: flex;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: #ffffff;
+            color: var(--primary-color);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        /* 自由練習模式樣式 */
+        .select-group { margin-bottom: 16px; }
+        select, .timer-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 1rem;
+            outline: none;
+            background-color: var(--primary-light);
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .info-card {
+            background-color: #f1f5f9;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .verse-title { font-size: 1rem; font-weight: 700; color: var(--primary-color); }
+        .stats-badge { font-size: 0.85rem; color: var(--text-muted); }
+        .stats-badge span { font-weight: 700; color: var(--accent-color); }
+
+        .btn-group { display: flex; gap: 10px; margin-bottom: 16px; }
+        .btn-action {
+            flex: 1; padding: 12px; font-size: 0.9rem; font-weight: 600;
+            border-radius: 12px; border: 1px solid var(--border-color);
+            background-color: #ffffff; color: var(--text-main); cursor: pointer;
+        }
+        .btn-action.active {
+            background-color: var(--primary-color); color: white; border-color: var(--primary-color);
+        }
+
+        .bible-display {
+            font-size: 1.25rem; line-height: 2.2; letter-spacing: 0.05em;
+            min-height: 120px; word-break: break-all; padding: 18px;
+            border-radius: 14px; background: #ffffff; border: 1.5px dashed var(--border-color);
+        }
+
+        /* 遊戲模式專屬樣式 */
+        .game-setup { text-align: center; }
+        .btn-play {
+            width: 100%; padding: 14px; background: var(--success-color); color: white;
+            font-size: 1.1rem; font-weight: 700; border: none; border-radius: 12px;
+            cursor: pointer; margin-top: 12px;
+        }
+
+        .timer-display {
+            font-size: 1.2rem; font-weight: 800; color: #dc2626; text-align: center; margin-bottom: 12px;
+        }
+
+        /* 經文內嵌輸入框樣式 */
+        .inline-char-input {
+            width: 2.2em;
+            height: 1.5em;
+            text-align: center;
+            font-size: 1.15rem;
+            font-weight: 700;
+            border: none;
+            border-bottom: 2.5px solid var(--primary-color);
+            background: #f1f5f9;
+            color: var(--primary-color);
+            outline: none;
+            border-radius: 4px;
+            margin: 0 3px;
+            vertical-align: baseline;
+            transition: all 0.2s;
+        }
+
+        .inline-char-input:focus {
+            background: var(--primary-light);
+            border-bottom-color: var(--primary-color);
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+        }
+
+        .inline-char-input.correct {
+            border-bottom-color: var(--success-color);
+            background: #f0fdf4;
+            color: var(--success-color);
+        }
+
+        .btn-next {
+            width: 100%; padding: 14px; background: var(--primary-color); color: white;
+            font-size: 1rem; font-weight: 700; border: none; border-radius: 12px; cursor: pointer;
+            margin-top: 20px; display: none; animation: popIn 0.3s ease;
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        footer { margin-top: 20px; text-align: center; font-size: 0.78rem; color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+<div class="app-card">
+    <header>
+        <h1>聖經背誦挑戰 App</h1>
+    </header>
+
+    <!-- 分頁切換 -->
+    <div class="tab-group">
+        <button class="tab-btn active" id="tabPractice" onclick="switchTab('practice')">📖 自由練習</button>
+        <button class="tab-btn" id="tabGame" onclick="switchTab('game')">⏱️ 遊戲計時 Play</button>
+    </div>
+
+    <!-- ================= 模式一：自由練習模式 ================= -->
+    <div id="practiceView">
+        <div class="select-group">
+            <select id="verseSelect" onchange="onSelectVerse()"></select>
+        </div>
+        <div class="info-card">
+            <div class="verse-title" id="verseTitle">--</div>
+            <div class="stats-badge"><span id="charCount">0</span> 字 | <span id="punctCount">0</span> 標點</div>
+        </div>
+        <div class="btn-group">
+            <button id="btnRandom" class="btn-action" onclick="setMode('random')">隨機填空遮蔽</button>
+            <button id="btnFull" class="btn-action" onclick="setMode('full')">顯示全文</button>
+        </div>
+        <div class="bible-display" id="displayText"></div>
+    </div>
+
+    <!-- ================= 模式二：遊戲計時模式 ================= -->
+    <div id="gameView" style="display: none;">
+        <!-- 1. 遊戲設定區 -->
+        <div id="gameSetup" class="game-setup">
+            <label style="display:block; margin-bottom: 8px; font-weight: 600;">選擇倒數時間：</label>
+            <select id="timeSelect" class="timer-select">
+                <option value="1">1 分鐘背誦挑戰</option>
+                <option value="2">2 分鐘背誦挑戰</option>
+                <option value="3">3 分鐘背誦挑戰</option>
+            </select>
+            <button class="btn-play" onclick="startGame()">開始 Play 🚀</button>
+        </div>
+
+        <!-- 2. 遊戲進行區 -->
+        <div id="gamePlay" style="display: none;">
+            <div class="timer-display">⏳ 剩餘時間：<span id="timerText">03:00</span></div>
+            <div class="info-card">
+                <div class="verse-title" id="gameVerseTitle">--</div>
+                <div class="stats-badge">已答對 <span id="scoreCount">0</span> 句</div>
+            </div>
+
+            <!-- 直接嵌入輸入框的題目經文 -->
+            <div class="bible-display" id="gameVerseText"></div>
+
+            <!-- 下一句按鈕 -->
+            <button class="btn-next" id="btnNext" onclick="nextQuestion()">完全正確！Next 下一句 ➔</button>
+        </div>
+
+        <!-- 3. 遊戲結算區 -->
+        <div id="gameResult" style="display: none; text-align: center;">
+            <h2 style="color: var(--primary-color);">🎉 時間到！挑戰完成</h2>
+            <p style="font-size: 1.2rem; margin: 20px 0;">你在時間內一共答對了：<br><strong id="finalScore" style="font-size: 2.5rem; color: var(--success-color);">0</strong> 句經文！</p>
+            <button class="btn-play" onclick="resetGameSetup()">再玩一次 🔄</button>
+        </div>
+    </div>
+
+    <footer>
+        Adm 可在原始碼 adminDatabase 自由擴充經文。
+    </footer>
+</div>
+
+<script>
+    // Database 預設經文 (已更換為「上帝」版)
+    const adminDatabase = {
+        "羅馬書 1:16": "我不以福音為恥；這福音本是上帝的大能，要救一切相信的，先是猶太人，後是希臘人。",
+        "羅馬書 3:23": "因為世人都犯了罪，虧缺了上帝的榮耀；",
+        "羅馬書 5:8": "惟有基督在我們還作罪人的時候為我們死，上帝的愛就在此向我們顯明了。",
+        "羅馬書 6:23": "因為罪的工價乃是死；惟有上帝的恩賜，在我們的主基督耶穌裏，乃是永生。",
+        "羅馬書 10:9": "你若口裏認耶穌為主，心裏信上帝叫祂從死裏復活，就必得救。",
+        "馬太福音 6:33": "你們要先求祂的國和祂的義，這些東西都要加給你們了。",
+        "馬太福音 6:34": "所以，不要為明天憂慮，因為明天自有明天的憂慮；一天的難處一天當就夠了。",
+        "約翰福音 1:1": "太初有道，道與上帝同在，道就是上帝。",
+        "約翰福音 3:16": "上帝愛世人，甚至將祂的獨生子賜給他們，叫一切信祂的，不致滅亡，反得永生。",
+        "約翰福音 14:6": "耶穌說：「我就是道路、真理、生命；若不藉着我，沒有人能到父那裡去。」",
+        "哥林多後書 5:17": "若有人在基督裡，他就是新造的人，舊事已過，都變成新的了。」"
+    };
+
+    const punctRegex = /[，。；：！？、「」『』（）…—\s\,\\.\\!\\?]/;
+
+    function switchTab(tab) {
+        document.getElementById('tabPractice').classList.toggle('active', tab === 'practice');
+        document.getElementById('tabGame').classList.toggle('active', tab === 'game');
+        document.getElementById('practiceView').style.display = tab === 'practice' ? 'block' : 'none';
+        document.getElementById('gameView').style.display = tab === 'game' ? 'block' : 'none';
+        if(tab === 'game') resetGameSetup();
+    }
+
+    /* 自由練習模式 */
+    let currentVerseText = "";
+    let currentMode = "blank";
+
+    window.onload = function() {
+        const selectEl = document.getElementById("verseSelect");
+        selectEl.innerHTML = "";
+        for (let key in adminDatabase) {
+            let option = document.createElement("option");
+            option.value = key;
+            option.textContent = key;
+            selectEl.appendChild(option);
+        }
+        onSelectVerse();
+    };
+
+    function onSelectVerse() {
+        const selectedKey = document.getElementById("verseSelect").value;
+        currentVerseText = adminDatabase[selectedKey];
+        document.getElementById("verseTitle").innerText = selectedKey;
+        currentMode = "blank";
+        resetButtonStyles();
+        updateStats();
+        renderVerse();
+    }
+
+    function updateStats() {
+        let charCount = 0, punctCount = 0;
+        for (let char of currentVerseText) {
+            punctRegex.test(char) ? punctCount++ : charCount++;
+        }
+        document.getElementById("charCount").innerText = charCount;
+        document.getElementById("punctCount").innerText = punctCount;
+    }
+
+    function resetButtonStyles() {
+        document.getElementById('btnRandom').classList.remove('active');
+        document.getElementById('btnFull').classList.remove('active');
+    }
+
+    function setMode(mode) {
+        if (currentMode === mode) {
+            currentMode = "blank";
+            resetButtonStyles();
+        } else {
+            currentMode = mode;
+            resetButtonStyles();
+            if (mode === 'random') document.getElementById('btnRandom').classList.add('active');
+            if (mode === 'full') document.getElementById('btnFull').classList.add('active');
+        }
+        renderVerse();
+    }
+
+    function renderVerse() {
+        const display = document.getElementById("displayText");
+        let html = "";
+        for (let char of currentVerseText) {
+            if (punctRegex.test(char)) { html += `<span style="color:var(--text-muted);">${char}</span>`; continue; }
+            if (currentMode === "blank") html += `<span style="display:inline-block;width:1.3em;border-bottom:2px solid var(--primary-color);margin:0 2px;"></span>`;
+            else if (currentMode === "random") html += Math.random() > 0.5 ? `<span style="display:inline-block;width:1.3em;border-bottom:2px solid var(--primary-color);margin:0 2px;"></span>` : char;
+            else html += char;
+        }
+        display.innerHTML = html;
+    }
+
+    /* 遊戲模式 */
+    let timer = null;
+    let timeRemaining = 0;
+    let score = 0;
+    let currentTargetAnswers = []; // 正確解答陣列
+    let remainingVerseKeys = [];   // 尚未出題的經文池
+    let isComposing = false;
+
+    function resetGameSetup() {
+        clearInterval(timer);
+        document.getElementById('gameSetup').style.display = 'block';
+        document.getElementById('gamePlay').style.display = 'none';
+        document.getElementById('gameResult').style.display = 'none';
+    }
+
+    function startGame() {
+        const minutes = parseInt(document.getElementById('timeSelect').value);
+        timeRemaining = minutes * 60;
+        score = 0;
+        document.getElementById('scoreCount').innerText = score;
+        
+        document.getElementById('gameSetup').style.display = 'none';
+        document.getElementById('gamePlay').style.display = 'block';
+        
+        remainingVerseKeys = []; 
+        startTimer();
+        nextQuestion();
+    }
+
+    function startTimer() {
+        updateTimerDisplay();
+        timer = setInterval(() => {
+            timeRemaining--;
+            updateTimerDisplay();
+            if (timeRemaining <= 0) {
+                clearInterval(timer);
+                endGame();
+            }
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        const m = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
+        const s = (timeRemaining % 60).toString().padStart(2, '0');
+        document.getElementById('timerText').innerText = `${m}:${s}`;
+    }
+
+    function endGame() {
+        document.getElementById('gamePlay').style.display = 'none';
+        document.getElementById('gameResult').style.display = 'block';
+        document.getElementById('finalScore').innerText = score;
+    }
+
+    function nextQuestion() {
+        document.getElementById('btnNext').style.display = 'none';
+
+        if (remainingVerseKeys.length === 0) {
+            remainingVerseKeys = Object.keys(adminDatabase);
+        }
+
+        const randomIndex = Math.floor(Math.random() * remainingVerseKeys.length);
+        const randomKey = remainingVerseKeys.splice(randomIndex, 1)[0];
+        const fullText = adminDatabase[randomKey];
+        document.getElementById('gameVerseTitle').innerText = randomKey;
+
+        let validCharIndices = [];
+        for (let i = 0; i < fullText.length; i++) {
+            if (!punctRegex.test(fullText[i])) {
+                validCharIndices.push(i);
+            }
+        }
+
+        let shuffled = [...validCharIndices].sort(() => 0.5 - Math.random());
+        let countToPick = Math.min(4, validCharIndices.length);
+        let targetIndices = shuffled.slice(0, countToPick).sort((a, b) => a - b);
+
+        currentTargetAnswers = targetIndices.map(idx => fullText[idx]);
+
+        let gameHtml = "";
+        let inputCounter = 0;
+
+        for (let i = 0; i < fullText.length; i++) {
+            const char = fullText[i];
+            if (punctRegex.test(char)) {
+                gameHtml += `<span style="color:var(--text-muted);">${char}</span>`;
+            } else if (targetIndices.includes(i)) {
+                gameHtml += `<input type="text" class="inline-char-input" id="gameInput${inputCounter}" autocomplete="off" data-index="${inputCounter}">`;
+                inputCounter++;
+            } else {
+                gameHtml += char;
+            }
+        }
+
+        document.getElementById('gameVerseText').innerHTML = gameHtml;
+        bindGameInputEvents(inputCounter);
+
+        setTimeout(() => {
+            const firstInput = document.getElementById('gameInput0');
+            if (firstInput) firstInput.focus();
+        }, 50);
+    }
+
+    function bindGameInputEvents(totalInputs) {
+        for (let i = 0; i < totalInputs; i++) {
+            const el = document.getElementById(`gameInput${i}`);
+            if (!el) continue;
+
+            el.addEventListener('compositionstart', () => { isComposing = true; });
+
+            el.addEventListener('compositionend', (e) => {
+                isComposing = false;
+                handleInlineInput(i, e.target, totalInputs);
+            });
+
+            el.addEventListener('input', (e) => {
+                if (!isComposing) {
+                    handleInlineInput(i, e.target, totalInputs);
+                }
+            });
+
+            el.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && el.value === '' && i > 0) {
+                    document.getElementById(`gameInput${i - 1}`).focus();
+                }
+            });
+        }
+    }
+
+    function handleInlineInput(index, inputEl, totalInputs) {
+        if (inputEl.value.length > 0) {
+            inputEl.value = inputEl.value.slice(-1); 
+            if (index < totalInputs - 1) {
+                document.getElementById(`gameInput${index + 1}`).focus();
+            }
+        }
+        checkInlineAnswer(totalInputs);
+    }
+
+    // 檢查答案比對（含「裡 / 裏」同義字規格判定）
+    function checkInlineAnswer(totalInputs) {
+        let isAllCorrect = true;
+
+        for (let i = 0; i < totalInputs; i++) {
+            const el = document.getElementById(`gameInput${i}`);
+            let val = el ? el.value.trim() : "";
+            let expected = currentTargetAnswers[i];
+
+            // 統一將「裡」替換為「裏」進行比較，達成兩者皆對的效果
+            let normalizedVal = (val === '裡') ? '裏' : val;
+            let normalizedExpected = (expected === '裡') ? '裏' : expected;
+
+            if (normalizedVal !== normalizedExpected) {
+                isAllCorrect = false;
+                break;
+            }
+        }
+
+        if (isAllCorrect) {
+            for (let i = 0; i < totalInputs; i++) {
+                const el = document.getElementById(`gameInput${i}`);
+                if (el) el.classList.add('correct');
+            }
+            score++;
+            document.getElementById('scoreCount').innerText = score;
+            document.getElementById('btnNext').style.display = 'block';
+        }
+    }
+</script>
+
+</body>
+</html>
